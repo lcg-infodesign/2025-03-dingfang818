@@ -28,7 +28,7 @@ function setup() {
 }
 
 function draw() {
-  background(10);
+  background("#04091D");
 
   // 绘制经纬度网格
   drawGrid();
@@ -65,9 +65,10 @@ function draw() {
 
   // 标题
   fill(255);
-  textSize(20);
-  textAlign(LEFT, TOP);
-  text("🌋 Interactive Volcano Visualization", 20, 20);
+  textSize(40);
+  textAlign(CENTER, TOP);
+  textStyle(BOLD);
+  text("🌋 Interactive Volcano Visualization", width/2, 20);
 
   // 图例
   drawLegend();
@@ -112,15 +113,20 @@ function drawVolcano(x, y, radius, c, highlight) {
 
 // 火山颜色分类
 function colorByType(type) {
-  if (!type) return color(200);
-  type = type.toLowerCase();
-  if (type.includes("strato")) return color(255, 80, 0, 200);
-  if (type.includes("shield")) return color(0, 150, 255, 200);
-  if (type.includes("complex")) return color(255, 200, 0, 200);
-  if (type.includes("submarine")) return color(0, 255, 150, 200);
-  if (type.includes("lava")) return color(255, 100, 200, 200);
-  return color(180, 180, 180, 150);
+  let c;
+
+  if (!type) c = color("#ADD5C4");
+  else if (type.toLowerCase().includes("strato")) c = color("#A6CDED");
+  else if (type.toLowerCase().includes("shield")) c = color("#CD5A5C");
+  else if (type.toLowerCase().includes("complex")) c = color("#F3C2B6");
+  else if (type.toLowerCase().includes("submarine")) c = color("#893F9A");
+  else if (type.toLowerCase().includes("lava")) c = color("#FCFDF9");
+  else c = color("#ADD5C4"); // 👈 默认颜色（别写 return）
+
+  c.setAlpha(150); // 🔹设置透明度
+  return c;        // ✅ 返回最终颜色
 }
+
 
 // 绘制 tooltip
 function drawTooltip(px, py, textString) {
@@ -138,12 +144,12 @@ function drawLegend() {
   let spacing = 120;
 
   let types = [
-    ["Stratovolcano", color(255, 80, 0)],
-    ["Shield", color(0, 150, 255)],
-    ["Complex", color(255, 200, 0)],
-    ["Submarine", color(0, 255, 150)],
-    ["Lava Dome", color(255, 100, 200)],
-    ["Other", color(180)]
+    ["Stratovolcano", color("#A6CDED")],
+    ["Shield", color("#CD5A5C")],
+    ["Complex", color("#F3C2B6")],
+    ["Submarine", color("#893F9A")],
+    ["Lava Dome", color("#FCFDF9")],
+    ["Other", color("#ADD5C4")]
   ];
 
   textSize(12);
@@ -163,33 +169,50 @@ function drawLegend() {
   }
 }
 
-// 绘制经纬度网格
+// 绘制经纬度网格（虚线）
 function drawGrid() {
   stroke(80);
   strokeWeight(1);
   textSize(12);
   fill(200);
 
+  // 设置虚线样式
+  drawingContext.setLineDash([4, 4]);
+
   // 经度每30°
-  for (let lon = Math.ceil(minLon/30)*30; lon <= maxLon; lon += 30) {
+  for (let lon = Math.ceil(minLon / 30) * 30; lon <= maxLon; lon += 30) {
     let x = map(lon, minLon, maxLon, outerMargin, width - outerMargin);
     line(x, outerMargin, x, height - outerMargin);
+
+    // 经纬度文字
+    drawingContext.setLineDash([]); // 先恢复为实线，避免文字绘制受影响
     noStroke();
     textAlign(CENTER, TOP);
     text(`${lon}°`, x, height - outerMargin + 5);
     stroke(80);
+    drawingContext.setLineDash([4, 4]); // 再恢复虚线
   }
 
   // 纬度每30°
-  for (let lat = Math.ceil(minLat/30)*30; lat <= maxLat; lat += 30) {
+  for (let lat = Math.ceil(minLat / 30) * 30; lat <= maxLat; lat += 30) {
     let y = map(lat, minLat, maxLat, height - outerMargin, outerMargin);
     line(outerMargin, y, width - outerMargin, y);
+
+    // 经纬度文字
+    drawingContext.setLineDash([]);
     noStroke();
     textAlign(RIGHT, CENTER);
     text(`${lat}°`, outerMargin - 5, y);
     stroke(80);
+    drawingContext.setLineDash([4, 4]);
   }
+
+  // 画完后恢复为实线
+  drawingContext.setLineDash([]);
 }
+
+
+
 
 // 窗口大小变化时重新计算火山坐标
 function windowResized() {
